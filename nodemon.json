@@ -1,0 +1,6 @@
+{
+    "env": {
+      "PRIVATE_KEY": "Mongodb123",
+      "DOCKER_MONGODB": "192.168.99.100:8000"
+    }
+  }
