@@ -3,11 +3,10 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 const logger = require('morgan');
-const cron = require('node-cron');
+const cron = require('node-schedule');
 const mongoose = require('mongoose');
 const routes = require('./routes/routes');
 const postsController = require('./controllers/posts-controller');
-//const routes = require('./routes/routes');
 
 mongoose.connect('mongodb+srv://claudio:'
                     + process.env.PRIVATE_KEY + 
@@ -34,11 +33,9 @@ app.use( (req, res, next) => {
 
 app.use('/posts', routes);
 
-cron.schedule("* * * * *", () => {
+cron.scheduleJob("0 */1 * * *", () => {
     postsController.everyHour();
 });
-
-postsController.everyHour();
 
 //declare port
 var port = process.env.PORT || 8000;

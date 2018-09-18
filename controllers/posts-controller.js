@@ -3,7 +3,8 @@ const Post = require('../models/post');
 
 const apiUrl = 'https://hn.algolia.com/api/v1/search_by_date?query=nodejs';
 
-function filterAndSort (posts) {
+//Filter by url and titles
+function filterPosts (posts) {
   //FILTER NULL URL
   const filteredByUrl = posts.filter(post => {
     let allowed = false;
@@ -21,19 +22,17 @@ function filterAndSort (posts) {
     return allowed;
   });
   //SORT POSTS BY DATE
-  const filteredAndSorted = filterNullTitles.sort((a, b) => {
-    return +new Date(b.created_at) - +new Date(a.created_at);
-  });
-  return filteredAndSorted;
+  return filterNullTitles;
 }
 
+//GET and SAVE new POST every hour
 exports.everyHour = async (req, res, next) => {
     try {
         data = await axios.get(apiUrl);
         const posts = data.data.hits;
-        const filteredAndSorted = filterAndSort(posts);
+        const filteredPosts = filterPosts(posts);
         newPosts = [];
-        for (let post of filteredAndSorted) {
+        for (let post of filteredPosts) {
           const saveDocs = await Post.countDocuments({_id: post.objectID});
           if (saveDocs > 0) {
             //console.log("Post already exists");
@@ -48,7 +47,7 @@ exports.everyHour = async (req, res, next) => {
             newPosts.push(obj);
           };
         };
-        console.log(filteredAndSorted.length);
+        console.log(filteredPosts.length);
         console.log(newPosts);
         const inserted = await Post.insertMany(newPosts);
         const reps = [
@@ -64,34 +63,32 @@ exports.everyHour = async (req, res, next) => {
       }
 },
 
+//GET Posts
 exports.getPosts = async (req, res, next) => {
   try {
     const posts = await Post.find();
-    //console.log(posts);
-    for (let post of posts) {
-      console.log(post._id);
-    }
-    console.log(posts)
-    return res.status(200).send(posts)
+    return res.status(200).send(posts);
   } catch(error) {
-    console.log(error);
+    return res.status(500).json({
+      error: "Something went wrong!"
+    });
   }
 },
 
+//DELETE single Post
 exports.deletePost = async (req, res, next) => {
   try {
     const deletedPost = await Post.deleteOne({ '_id': req.params.id });
-    console.log(deletedPost.n);
     if (deletedPost.n == 0) {
       return res.status(500).json({
         message: "Something went wrong"
-      })
+      });
     }
     return res.status(200).json({
       message: "success"
-    })
-    
+    });
   } catch(error) {
     console.log(error);
   }
+  
 }
