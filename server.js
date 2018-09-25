@@ -8,13 +8,11 @@ const mongoose = require('mongoose');
 const routes = require('./routes/routes');
 const postsController = require('./controllers/posts-controller');
 
-mongoose.connect('mongodb+srv://claudio:'
-                    + process.env.PRIVATE_KEY + 
-                        '@cluster0-lhxzj.gcp.mongodb.net/test?retryWrites=true', {
+mongoose.connect('mongodb://localhost:27017/test', {
                             useNewUrlParser: true
                         })
         .then(db => console.log("DB connected"))
-        .catch(err => console.log(err, process.env.MONGO_PW));
+        .catch(err => console.log(err));
 
 const app = express();
 
@@ -32,6 +30,9 @@ app.use( (req, res, next) => {
 });
 
 app.use('/posts', routes);
+
+//TO POPULATE DATABASE AT FIRST INIT
+postsController.everyHour();
 
 cron.scheduleJob("0 */1 * * *", () => {
     postsController.everyHour();
